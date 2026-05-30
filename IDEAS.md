@@ -34,17 +34,40 @@ Let the actual number go up and down, and let the color follow it.
   count down as you use things (e.g. ground beef 6 → 5 → 4 lbs), instead
   of only flipping to Low/Out by hand. Touch targets ≥44px like the rest.
 - **Auto color from a threshold:** to compute "below ~33%" we need a
-  baseline to measure against — the current `quantity` alone has no notion
-  of "full." Option A: add a `par` / `full_quantity` field (the amount you
-  consider fully stocked) and derive status as a % of par. Option B:
-  remember the highest quantity seen as "full." Leaning **A** — explicit
-  par is predictable and lets the partner set "we keep 6 lbs."
+  baseline ("full") to measure against — the current `quantity` alone has
+  no notion of it. **Decided (2026-05-30):** "full" = **the quantity first
+  entered** when the item is created. Store it as a `par` / `full_quantity`
+  field, but **auto-seed it from the initial quantity** so there's no extra
+  input — add ground beef at 6 lbs and par becomes 6. Keep the field
+  editable later (you can correct "we actually keep 8"). Status is then a %
+  of par. *(See the learned-restock idea below for making par smarter over
+  time.)*
 - **Status interaction:** if color becomes automatic (ok/low/out derived
   from quantity vs. par), do we keep the manual Have it/Low/Out buttons?
   Likely keep a manual **override** (some things you just *know* are low),
   but default to auto. Decide when we build it.
 - **Thresholds:** start simple — `out` at 0, `low` below ~33% of par,
   else `ok`. Make the 33% a single constant so it's easy to tune.
+
+### Learned restock amount — *2026-05-30* — *fuzzy / later*
+
+Captured early; details TBD. If we tend to **buy the same amount each
+time**, the app should notice and default to it — so "full" / par isn't
+just the first entry forever, it adapts to how we actually restock.
+
+- **Sketch:** when an item is restocked (quantity bumped back up, or marked
+  Have-it after being Out), record *how much* it was topped up to. Over a
+  few cycles, if that amount is consistent, treat it as the item's natural
+  "full" and use it for par / the restock default.
+- **Why it's nice:** par stops being a guess from one moment; the +/-
+  steppers and the low threshold reflect real buying habits. Buy milk a gal
+  at a time → "full" settles on 1 gal even if you once entered 2.
+- **Unknowns (on purpose):** how many cycles before trusting a pattern?
+  median vs. last-value vs. mode? what if the amount drifts (switched pack
+  size)? Manual override always wins. No need to solve now — just don't
+  lose the idea.
+- **Dependency:** needs a little history per item (restock events), so
+  it's downstream of the basic quantity/par work above, not part of it.
 
 ---
 
