@@ -8,7 +8,7 @@ full reload, so there's no hand-written JSON-to-DOM glue.
 
 from contextlib import asynccontextmanager
 
-from fastapi import Depends, FastAPI, Request
+from fastapi import Depends, FastAPI, Form, Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -48,6 +48,32 @@ def index(request: Request, session: Session = Depends(get_session)):
 @app.get("/items", response_class=HTMLResponse)
 def list_items(request: Request, session: Session = Depends(get_session)):
     """Just the list fragment — the HTMX swap target for #item-list."""
+    return templates.TemplateResponse(
+        request,
+        "_item_list.html",
+        {"items": _all_items(session)},
+    )
+
+
+@app.post("/items", response_class=HTMLResponse)
+def create_item(
+    request: Request,
+    name: str = Form(...),
+    quantity: float = Form(1),
+    unit: str = Form("pcs"),
+    location: Location = Form(Location.pantry),
+    session: Session = Depends(get_session),
+):
+    """Add an item from the form, then return the refreshed list."""
+    name = name.strip()
+    if name:                            # ignore an empty submit, don't error
+        session.add(Item(
+            name=name,
+            quantity=quantity,
+            unit=unit.strip() or "pcs",
+            location=location,
+        ))
+        session.commit()
     return templates.TemplateResponse(
         request,
         "_item_list.html",
