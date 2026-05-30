@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# SQLite database files (data lives outside version control)
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Environment / secrets
+.env
+
+# Editor / OS cruft
+.idea/
+.vscode/
+*.swp
+.DS_Store
