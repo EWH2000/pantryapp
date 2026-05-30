@@ -16,6 +16,9 @@ venv/
 # Environment / secrets
 .env
 
+# Local-only notes (personal/user context — never publish)
+USER-CONTEXT.md
+
 # Editor / OS cruft
 .idea/
 .vscode/

@@ -98,13 +98,10 @@ browser is at `/docs`.
 **Server (deploy):** _not built yet._ Will be `podman build` +
 `podman run` with a volume mount for `pantry.db` so data survives rebuilds.
 
-## About the user
+## Who it's for
 
-- Background in building automation / controls (BACnet, Modbus, Niagara,
-  EBO); strong IP networking. Comfortable in a terminal; learning
-  software-dev workflows and Git. **Wants to understand what's happening,
-  not just have it work** — briefly explain new concepts/commands.
-- This is a **partner-facing** app. The partner uses Fedora KDE Plasma,
-  is comfortable but won't use a terminal, and will be a primary user of
-  the kitchen display. That raises the polish/usability bar: it has to be
-  obvious and forgiving to operate by touch, with no jargon.
+Two everyday users on a wall-mounted kitchen touchscreen — not developers,
+not sitting at a desk. One person runs and deploys the app; the other
+operates it purely by touch and never sees a command line. That sets the
+usability bar: every primary action must be obvious, forgiving, and
+jargon-free, with big touch targets, readable at arm's length.
