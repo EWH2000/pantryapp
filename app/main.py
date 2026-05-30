@@ -15,7 +15,7 @@ from fastapi.templating import Jinja2Templates
 from sqlmodel import Session, col, select
 
 from app.db import get_session, init_db
-from app.models import Item, Location
+from app.models import Item, Location, Status
 
 
 @asynccontextmanager
@@ -93,6 +93,44 @@ def create_item(
             unit=unit.strip() or "pcs",
             location=location,
         ))
+        session.commit()
+    return templates.TemplateResponse(
+        request,
+        "_item_list.html",
+        {"items": _all_items(session)},
+    )
+
+
+@app.post("/items/{item_id}/status", response_class=HTMLResponse)
+def set_status(
+    request: Request,
+    item_id: int,
+    status: Status = Form(...),
+    session: Session = Depends(get_session),
+):
+    """Mark an item have-it / low / out, then return the refreshed list."""
+    item = session.get(Item, item_id)
+    if item:
+        item.status = status
+        session.add(item)
+        session.commit()
+    return templates.TemplateResponse(
+        request,
+        "_item_list.html",
+        {"items": _all_items(session)},
+    )
+
+
+@app.delete("/items/{item_id}", response_class=HTMLResponse)
+def delete_item(
+    request: Request,
+    item_id: int,
+    session: Session = Depends(get_session),
+):
+    """Remove an item, then return the refreshed list."""
+    item = session.get(Item, item_id)
+    if item:
+        session.delete(item)
         session.commit()
     return templates.TemplateResponse(
         request,
