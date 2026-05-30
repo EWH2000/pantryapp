@@ -12,7 +12,7 @@ from fastapi import Depends, FastAPI, Form, Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from sqlmodel import Session, select
+from sqlmodel import Session, col, select
 
 from app.db import get_session, init_db
 from app.models import Item, Location
@@ -46,12 +46,32 @@ def index(request: Request, session: Session = Depends(get_session)):
 
 
 @app.get("/items", response_class=HTMLResponse)
-def list_items(request: Request, session: Session = Depends(get_session)):
-    """Just the list fragment — the HTMX swap target for #item-list."""
+def list_items(
+    request: Request,
+    q: str = "",
+    location: str = "",
+    session: Session = Depends(get_session),
+):
+    """The list fragment, optionally narrowed by search text and location.
+
+    This is the HTMX swap target for #item-list. The search box and the
+    location chips both call here; `q` and `location` may be empty.
+    """
+    statement = select(Item)
+    q = q.strip()
+    if q:
+        # ilike = case-insensitive match; %term% = "contains".
+        statement = statement.where(col(Item.name).ilike(f"%{q}%"))
+    if location:
+        try:
+            statement = statement.where(Item.location == Location(location))
+        except ValueError:
+            pass                        # unknown location → no filter
+    items = list(session.exec(statement.order_by(Item.name)).all())
     return templates.TemplateResponse(
         request,
         "_item_list.html",
-        {"items": _all_items(session)},
+        {"items": items},
     )
 
 
