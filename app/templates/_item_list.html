@@ -1,0 +1,17 @@
+{% if items %}
+<ul class="items">
+    {% for item in items %}
+    <li class="item item--{{ item.status.value }}">
+        <div class="item-main">
+            <span class="item-name">{{ item.name }}</span>
+            <span class="item-meta">
+                {{ "%g"|format(item.quantity) }} {{ item.unit }}
+                · {{ item.location.value|capitalize }}
+            </span>
+        </div>
+    </li>
+    {% endfor %}
+</ul>
+{% else %}
+<p class="empty">Nothing here yet. Add your first item above.</p>
+{% endif %}

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <!-- viewport-fit=cover lets the page use the full iPad screen edge-to-edge -->
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>Kitchen Pantry</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <!-- HTMX is served locally, never from a CDN: the kitchen iPad only
+         talks to the LAN and can't reach the internet. -->
+    <script src="/static/js/htmx.min.js" defer></script>
+</head>
+<body>
+    <header class="app-header">
+        <h1>Kitchen Pantry</h1>
+    </header>
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

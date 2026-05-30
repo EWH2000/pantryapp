@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="add-card">
+    <!-- On submit, POST the form and replace #item-list with the fresh
+         list HTMX gets back. On success, reset the form for the next add. -->
+    <form id="add-form"
+          hx-post="/items"
+          hx-target="#item-list"
+          hx-swap="innerHTML"
+          hx-on::after-request="if (event.detail.successful) this.reset()">
+        <input class="add-name" type="text" name="name"
+               placeholder="Add an item…" autocomplete="off" required>
+        <div class="add-row">
+            <label class="field">How much
+                <input type="number" name="quantity" value="1"
+                       min="0" step="any" inputmode="decimal">
+            </label>
+            <label class="field">Unit
+                <input type="text" name="unit" value="pcs" autocomplete="off">
+            </label>
+            <label class="field">Where
+                <select name="location">
+                    {% for loc in locations %}
+                    <option value="{{ loc.value }}">{{ loc.value|capitalize }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+        </div>
+        <button class="btn btn-add" type="submit">Add to pantry</button>
+    </form>
+</section>
+
+<section class="controls">
+    <!-- Search re-runs as you type (debounced). It includes the currently
+         checked location chip so search + filter combine. -->
+    <input class="search" type="search" name="q"
+           placeholder="Search the pantry…" autocomplete="off"
+           hx-get="/items"
+           hx-trigger="input changed delay:300ms, search"
+           hx-target="#item-list"
+           hx-include=".filters input:checked">
+    <div class="filters">
+        <label class="chip">
+            <input type="radio" name="location" value="" checked
+                   hx-get="/items" hx-target="#item-list"
+                   hx-include=".search">
+            <span>All</span>
+        </label>
+        {% for loc in locations %}
+        <label class="chip">
+            <input type="radio" name="location" value="{{ loc.value }}"
+                   hx-get="/items" hx-target="#item-list"
+                   hx-include=".search">
+            <span>{{ loc.value|capitalize }}</span>
+        </label>
+        {% endfor %}
+    </div>
+</section>
+
+<section id="item-list">
+    {% include "_item_list.html" %}
+</section>
+{% endblock %}
