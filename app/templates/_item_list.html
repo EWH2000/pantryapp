@@ -7,6 +7,7 @@
             <span class="item-meta">
                 {{ "%g"|format(item.quantity) }} {{ item.unit }}
                 · {{ item.location.value|capitalize }}
+                {% if item.category %} · {{ item.category.value|capitalize }}{% endif %}
             </span>
         </div>
         <div class="item-actions">

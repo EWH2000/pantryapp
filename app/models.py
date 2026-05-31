@@ -28,6 +28,14 @@ class Status(str, Enum):
     out = "out"    # out — buy now
 
 
+class Category(str, Enum):
+    """What role an item plays in a meal — for sorting/filtering."""
+
+    main = "main"      # the centerpiece (meat, mains)
+    side = "side"      # sides, veg, starches
+    snack = "snack"    # snacks, nibbles
+
+
 class Item(SQLModel, table=True):
     """One thing in the kitchen we're keeping track of.
 
@@ -41,6 +49,8 @@ class Item(SQLModel, table=True):
     unit: str = "pcs"                            # free text, e.g. "g", "L"
     location: Location = Location.pantry
     status: Status = Status.ok
+    # Optional: not every staple is a main/side/snack (oil, flour…).
+    category: Category | None = Field(default=None, index=True)
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc)
     )
