@@ -18,7 +18,8 @@ on the local network. All logic and data live on the server.
 - **Frontend:** Jinja2 server-rendered templates + [HTMX](https://htmx.org/)
   for dynamic updates — no JS framework, no bundler. HTMX is vendored
   locally (the display device never reaches the internet)
-- **Runtime (planned):** rootless Podman container on the home server
+- **Runtime:** rootless Podman container managed by systemd (Quadlet),
+  data on a persistent volume, daily backups — see [`deploy/`](./deploy/)
 
 ## Features (v1)
 
@@ -50,10 +51,12 @@ FastAPI's interactive API browser is at `/docs`.
 
 ## Status & roadmap
 
-- **v1 (in progress):** the pantry list above — done and running locally.
+- **v1:** the pantry list above — built, with item categories (main / side /
+  snack), and deployable as a rootless Podman service with backups.
 - **Next:** adjustable quantities with auto-low coloring, expiration dates,
-  a Podman `Containerfile`, and PWA support (add-to-home-screen, fullscreen
-  kiosk mode). See [`IDEAS.md`](./IDEAS.md) for the running idea/friction log.
+  recipes + "can I make it?" matching, and PWA support (add-to-home-screen,
+  fullscreen kiosk mode). See [`IDEAS.md`](./IDEAS.md) for the running
+  idea/friction log.
 
 ## License
 
