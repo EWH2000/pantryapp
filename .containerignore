@@ -1,0 +1,24 @@
+# Keep the build context small and avoid copying local state into the image.
+.git/
+.gitignore
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+
+# Never bake data or local-only notes into the image.
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+.env
+USER-CONTEXT.md
+
+# Tooling / docs not needed at runtime.
+.claude/
+deploy/
+*.md
+Containerfile
+.containerignore
