@@ -6,6 +6,7 @@ template — either the whole page (`index.html`) or just the list fragment
 full reload, so there's no hand-written JSON-to-DOM glue.
 """
 
+import mimetypes
 from contextlib import asynccontextmanager
 
 from fastapi import Depends, FastAPI, Form, Request
@@ -24,6 +25,10 @@ async def lifespan(app: FastAPI):
     init_db()
     yield
 
+
+# Serve the PWA manifest with the correct type; StaticFiles guesses from
+# this registry and Python doesn't know .webmanifest by default.
+mimetypes.add_type("application/manifest+json", ".webmanifest")
 
 app = FastAPI(title="pantryapp", lifespan=lifespan)
 app.mount("/static", StaticFiles(directory="app/static"), name="static")

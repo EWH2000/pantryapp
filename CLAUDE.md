@@ -10,8 +10,10 @@ pointed at a URL on the LAN. All logic and data live on the server.
 > add / list / search / filter / mark-status / remove plus item type
 > (main / side / snack), all server-rendered with HTMX, and runs in
 > production as a rootless Podman + systemd service with daily backups
-> (see `deploy/`). Remaining: the **PWA** (manifest + service worker) and
-> the roadmap in `IDEAS.md`. Keep this file current as those land.
+> (see `deploy/`). The **PWA** is installable: a web manifest + Apple meta
+> tags let the iPad "Add to Home Screen" and run chrome-less/fullscreen.
+> **No service worker** — see the Stack note for why. Remaining: the
+> roadmap in `IDEAS.md`. Keep this file current as those land.
 
 ## Why this shape
 
@@ -38,8 +40,13 @@ Decisions made up front (2026-05-30); revisit deliberately, not by drift.
   re-render the item list on add without a full reload). Same vanilla
   spirit as the author's other project. Hand-written vanilla JS only
   where HTMX doesn't reach.
-- **PWA:** a web manifest + service worker so the iPad can "Add to Home
-  Screen" and run fullscreen, kiosk-style, with no Safari chrome.
+- **PWA:** a web manifest + Apple meta tags so the iPad can "Add to Home
+  Screen" and run fullscreen, kiosk-style, with no Safari chrome. *(Built
+  2026-05-31.)* **Deliberately no service worker:** the iPad reaches the
+  app over plain HTTP on the LAN (`http://<server-ip>:8000`), which is not
+  a secure context, so a service worker would never register there — and
+  the app is useless offline anyway (all data is server-side). Installable
+  standalone mode needs none. Revisit only if the deploy ever gains TLS.
 - **Runtime: rootless Podman container** on the home server. A
   `Containerfile` builds the image; the SQLite file lives on a mounted
   volume so data survives rebuilds.
@@ -77,7 +84,13 @@ Seeded; grow this as patterns settle.
   - `app/templates/` — `base.html`, `index.html`, and `_item_list.html`
     (the list fragment HTMX swaps into `#item-list`; leading `_` = partial).
   - `app/static/css/styles.css`, `app/static/js/htmx.min.js` (vendored —
-    **no CDN**, the iPad is LAN-only). Manifest/service worker land here later.
+    **no CDN**, the iPad is LAN-only).
+  - `app/static/manifest.webmanifest` — PWA manifest (linked from
+    `base.html`, served as `application/manifest+json` via a MIME type
+    registered in `main.py`).
+  - `app/static/icons/` — `icon.svg` (source of truth) + generated
+    `icon-180/192/512.png`; regenerate with
+    `rsvg-convert -w N -h N icon.svg -o icon-N.png`.
   - `requirements.txt` — direct deps pinned; `pantry.db` is the gitignored
     SQLite file, created automatically on first run.
   - `Containerfile` + `.containerignore` — production image (rootless,
