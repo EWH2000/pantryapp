@@ -35,6 +35,12 @@ def _all_items(session: Session) -> list[Item]:
     return list(session.exec(select(Item).order_by(Item.name)).all())
 
 
+@app.get("/health")
+def health():
+    """Liveness check for the container healthcheck and monitoring."""
+    return {"status": "ok"}
+
+
 @app.get("/", response_class=HTMLResponse)
 def index(request: Request, session: Session = Depends(get_session)):
     """The full page: add form, search/filter controls, and the list."""
