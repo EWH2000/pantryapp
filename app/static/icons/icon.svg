@@ -1,16 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- pantryapp home-screen icon: a labeled jar on the app's dark background.
-     Source of truth for the generated PNGs (see icon-*.png). Full-bleed
-     background (no rounded corners) so iOS rounds it and Android can mask
-     it; the glyph sits inside the maskable 80% safe zone. Regenerate with
-     deploy/../ -> rsvg-convert (see CLAUDE.md / commit). -->
+<!-- pantryapp home-screen icon: a labeled jar on the house-style terracotta
+     background. Source of truth for the generated PNGs (see icon-*.png).
+     Full-bleed background (no rounded corners) so iOS rounds it and Android
+     can mask it; the glyph sits inside the maskable 80% safe zone. Regenerate
+     with: cd app/static/icons && for n in 180 192 512; do
+     rsvg-convert -w $n -h $n icon.svg -o icon-$n.png; done -->
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512"
      viewBox="0 0 512 512">
-    <rect width="512" height="512" fill="#11161c"/>
+    <rect width="512" height="512" fill="#e0653a"/>
     <!-- lid -->
-    <rect x="176" y="104" width="160" height="54" rx="14" fill="#3ba0ff"/>
+    <rect x="176" y="104" width="160" height="54" rx="14" fill="#ffffff"/>
     <!-- jar body -->
-    <rect x="156" y="162" width="200" height="270" rx="44" fill="#f2f5f8"/>
+    <rect x="156" y="162" width="200" height="270" rx="44" fill="#ffffff"/>
     <!-- label band -->
-    <rect x="156" y="262" width="200" height="92" fill="#3ba0ff"/>
+    <rect x="156" y="262" width="200" height="92" fill="#e0653a"/>
 </svg>
