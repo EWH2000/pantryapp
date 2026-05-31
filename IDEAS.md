@@ -9,6 +9,37 @@ top within each section. Dates are when the note was added.
 
 ## Ideas
 
+### Recipes + "can I make it?" cross-check — *2026-05-31* — *v2 / larger*
+
+The v2 "meal ideas" direction, fleshed out. Two connected pieces:
+
+1. **Recipes in the app.** Add/edit a recipe as a **checklist** of
+   ingredients — name, and (optionally) how much. The checklist doubles as
+   a cook-along: tick ingredients off as you use them.
+2. **Cross-check against the pantry.** For each recipe, compare its
+   ingredients to what's on hand and show a clear **"you can make this"** /
+   **"missing X, Y"** verdict. Ideally browse recipes filtered to "makeable
+   right now."
+
+- **New data model (the v2 second model):** `Recipe` + `RecipeIngredient`
+  (one recipe, many ingredients). This is the recipes / ingredient-matching
+  model CLAUDE.md's scope calls out as deliberately out of v1.
+- **The hard part — matching ingredients to pantry items:** a recipe says
+  "ground beef"; the pantry has an `Item` named "Ground Beef." Options:
+  fuzzy name match (normalize case/whitespace), or link each ingredient to a
+  specific `Item` via a picker (more reliable, more setup). Lean toward
+  name-match first, manual link as an upgrade.
+- **Presence vs. enough:** start simple — do we *have* the ingredient at all
+  (status not `out` / quantity > 0)? A later upgrade checks we have *enough*,
+  which means comparing required amount to on-hand amount, and unit
+  conversion (lbs vs oz vs "2 onions") is genuinely messy. Presence first;
+  quantity-sufficiency is a follow-up.
+- **Ties into other ideas:** ticking ingredients off while cooking could
+  **decrement pantry quantities** (see *Adjustable quantity*), and the
+  makeable/not verdict is only as good as the `status`/quantity data.
+- **Touch UX:** "what can we make?" should be a big, glanceable list on the
+  kitchen display — green = make it now, with any missing items spelled out.
+
 ### Expiration date on items — *2026-05-30*
 
 Add an optional "use by" date to each item.
