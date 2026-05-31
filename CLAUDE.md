@@ -96,8 +96,12 @@ Seeded; grow this as patterns settle.
 (`pantry.db`) is created automatically on first start. The interactive API
 browser is at `/docs`.
 
-**Server (deploy):** _not built yet._ Will be `podman build` +
-`podman run` with a volume mount for `pantry.db` so data survives rebuilds.
+**Server (deploy):** rootless Podman container managed by systemd
+(Quadlet), data on a persistent named volume, daily SQLite backups, served
+on LAN port 8000. Build with `podman build -t pantryapp .`; full runbook in
+[`deploy/README.md`](deploy/README.md). The container sets
+`PANTRY_DB_PATH=/data/pantry.db` (mounted volume); dev leaves it unset and
+uses `./pantry.db`.
 
 ## Who it's for
 

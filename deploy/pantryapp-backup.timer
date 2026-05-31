@@ -1,0 +1,12 @@
+# Run the pantryapp backup once a day at 03:00.
+# Install to ~/.config/systemd/user/ and: systemctl --user enable --now pantryapp-backup.timer
+[Unit]
+Description=Daily pantryapp SQLite backup
+
+[Timer]
+OnCalendar=*-*-* 03:00:00
+# Catch up on a missed run (e.g. server was off at 03:00).
+Persistent=true
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,37 @@
+# Quadlet unit for pantryapp — a rootless, systemd-managed container.
+#
+# Install (rootless / user service):
+#   cp deploy/pantryapp.container ~/.config/containers/systemd/
+#   systemctl --user daemon-reload
+#   systemctl --user start pantryapp.service
+#
+# systemd generates `pantryapp.service` from this file at daemon-reload.
+
+[Unit]
+Description=pantryapp — kitchen inventory web app
+After=network-online.target
+Wants=network-online.target
+
+[Container]
+ContainerName=pantryapp
+Image=localhost/pantryapp:latest
+# host:container — serve on the LAN on port 8000.
+PublishPort=8000:8000
+# Named volume holds the live SQLite DB; :U fixes ownership for the
+# non-root container user. Survives image rebuilds & container re-creation.
+Volume=pantrydata:/data:U
+# Liveness: hit /health with the stdlib (no curl in the slim image).
+HealthCmd=python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"
+HealthInterval=30s
+HealthTimeout=3s
+HealthRetries=3
+HealthStartPeriod=5s
+
+[Service]
+# Restart the container if it ever exits.
+Restart=always
+RestartSec=5
+
+[Install]
+# Start automatically on boot (requires `loginctl enable-linger`).
+WantedBy=default.target

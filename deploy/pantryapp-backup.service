@@ -1,0 +1,11 @@
+# Oneshot service that snapshots the pantryapp database.
+# Triggered by pantryapp-backup.timer. Install to ~/.config/systemd/user/.
+[Unit]
+Description=pantryapp SQLite backup
+# Need the app container running so `podman exec` works.
+Requires=pantryapp.service
+After=pantryapp.service
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/pantryapp-backup.sh
