@@ -23,8 +23,9 @@ on the local network. All logic and data live on the server.
 
 ## Features (v1)
 
-- Add an item with quantity, unit, and location (pantry / fridge / freezer)
-- Live search by name and filter by location
+- Add an item with quantity, unit, location (pantry / fridge / freezer),
+  and type (main / side / snack)
+- Live search by name and filter by location or type
 - Mark each item **Have it / Low / Out** (color-coded at a glance)
 - Remove items
 - Everything persists to a single SQLite file and survives restarts

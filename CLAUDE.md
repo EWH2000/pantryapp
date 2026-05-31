@@ -6,11 +6,12 @@ server and is displayed on a wall-mounted (repurposed) iPad in the
 kitchen. The iPad is a **dumb display**: it runs nothing but Safari
 pointed at a URL on the LAN. All logic and data live on the server.
 
-> **Current state: v1 in progress.** The runnable skeleton landed
-> 2026-05-30: add / list / search / filter / mark-status / remove, all
-> server-rendered with HTMX. Still deferred from v1: the Podman
-> `Containerfile` and the PWA (manifest + service worker). Keep this file
-> current as those land.
+> **Current state: v1 built and deployed.** As of 2026-05-31 the app does
+> add / list / search / filter / mark-status / remove plus item type
+> (main / side / snack), all server-rendered with HTMX, and runs in
+> production as a rootless Podman + systemd service with daily backups
+> (see `deploy/`). Remaining: the **PWA** (manifest + service worker) and
+> the roadmap in `IDEAS.md`. Keep this file current as those land.
 
 ## Why this shape
 
@@ -51,11 +52,12 @@ Decisions made up front (2026-05-30); revisit deliberately, not by drift.
 
 ## Scope
 
-- **v1 — pantry only.** Add an item; set quantity, unit, and location
-  (pantry / fridge / freezer); mark low / out; search and filter the
-  list. Get this genuinely pleasant to *use on a touch screen* before
-  adding anything else. Touch targets ≥44px; big tap zones; readable at
-  arm's length on the kitchen iPad.
+- **v1 — pantry only.** *(Built + deployed.)* Add an item; set quantity,
+  unit, location (pantry / fridge / freezer), and type (main / side /
+  snack); mark low / out; search and filter the list. Get this genuinely
+  pleasant to *use on a touch screen* before adding anything else. Touch
+  targets ≥44px; big tap zones; readable at arm's length on the kitchen
+  iPad.
 - **v2 (roadmap) — meal ideas.** "What can we make with what we have."
   This pulls in a second data model (recipes + ingredient matching), so
   it's deliberately out of v1.
@@ -66,16 +68,23 @@ Seeded; grow this as patterns settle.
 
 - **4-space indentation** everywhere (Python, HTML, CSS, JS).
 - **Layout** (as built):
-  - `app/main.py` — FastAPI app + all routes (`/`, `GET/POST /items`,
-    `POST /items/{id}/status`, `DELETE /items/{id}`).
-  - `app/models.py` — SQLModel `Item` table + `Location`/`Status` enums.
-  - `app/db.py` — SQLite engine, `init_db()`, `get_session()` dependency.
+  - `app/main.py` — FastAPI app + all routes (`/`, `GET /health`,
+    `GET/POST /items`, `POST /items/{id}/status`, `DELETE /items/{id}`).
+  - `app/models.py` — SQLModel `Item` table + `Location`/`Status`/`Category`
+    enums.
+  - `app/db.py` — SQLite engine (`PANTRY_DB_PATH` env, default `pantry.db`),
+    `init_db()`, `get_session()` dependency.
   - `app/templates/` — `base.html`, `index.html`, and `_item_list.html`
     (the list fragment HTMX swaps into `#item-list`; leading `_` = partial).
   - `app/static/css/styles.css`, `app/static/js/htmx.min.js` (vendored —
     **no CDN**, the iPad is LAN-only). Manifest/service worker land here later.
   - `requirements.txt` — direct deps pinned; `pantry.db` is the gitignored
     SQLite file, created automatically on first run.
+  - `Containerfile` + `.containerignore` — production image (rootless,
+    `python:3.14-slim`, prod uvicorn).
+  - `deploy/` — Quadlet unit, backup script + systemd timer, and the deploy
+    runbook (`deploy/README.md`).
+  - `IDEAS.md` — running ideas / friction log.
 - **One language front-to-back is Python**; client JS is the exception,
   not the default — reach for HTMX first.
 - **Git:** branch → edit → commit → push; never merge without being
