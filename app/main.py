@@ -30,8 +30,27 @@ async def lifespan(app: FastAPI):
 # this registry and Python doesn't know .webmanifest by default.
 mimetypes.add_type("application/manifest+json", ".webmanifest")
 
+
+class RevalidatingStaticFiles(StaticFiles):
+    """StaticFiles that tells the browser to revalidate before reusing an asset.
+
+    Plain StaticFiles sends an ETag but no Cache-Control, so browsers (Safari
+    on the kitchen iPad especially, doubly so once installed as a PWA) fall
+    back to *heuristic* caching: they keep a stale copy and don't revalidate.
+    That's how a restyle can ship to the server yet the iPad keeps showing the
+    old CSS. `no-cache` means "store it, but always check the ETag first" — the
+    revalidation is a cheap 304 on the LAN, and a changed file is picked up at
+    once. Asset URLs are stable, so this is the right trade for this app.
+    """
+
+    async def get_response(self, path, scope):
+        response = await super().get_response(path, scope)
+        response.headers["Cache-Control"] = "no-cache"
+        return response
+
+
 app = FastAPI(title="pantryapp", lifespan=lifespan)
-app.mount("/static", StaticFiles(directory="app/static"), name="static")
+app.mount("/static", RevalidatingStaticFiles(directory="app/static"), name="static")
 templates = Jinja2Templates(directory="app/templates")
 
 
