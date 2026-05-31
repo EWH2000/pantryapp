@@ -40,6 +40,15 @@ Decisions made up front (2026-05-30); revisit deliberately, not by drift.
   re-render the item list on add without a full reload). Same vanilla
   spirit as the author's other project. Hand-written vanilla JS only
   where HTMX doesn't reach.
+- **Look: the home-hub house style** (see `~/caddy/CLAUDE.md` for the
+  canonical tokens). Self-hosted Bricolage Grotesque (headings) + Hanken
+  Grotesk (body) from `app/static/fonts/` (no CDN), warm terracotta accent,
+  light **and** dark via `prefers-color-scheme` — a visual sibling of the
+  hub and `~/choresapp/`. *(Migrated 2026-05-31 from the original
+  dark-blue-only theme.)* Kitchen-iPad constraints kept on top of the
+  shared tokens: 18px base type, ≥44px tap targets, sticky header with iOS
+  safe-area inset. The ok/low/out stock cues (green/amber/red) are re-mapped
+  onto the house palette but keep their meaning.
 - **PWA:** a web manifest + Apple meta tags so the iPad can "Add to Home
   Screen" and run fullscreen, kiosk-style, with no Safari chrome. *(Built
   2026-05-31.)* **Deliberately no service worker:** the iPad reaches the
@@ -85,6 +94,9 @@ Seeded; grow this as patterns settle.
     (the list fragment HTMX swaps into `#item-list`; leading `_` = partial).
   - `app/static/css/styles.css`, `app/static/js/htmx.min.js` (vendored —
     **no CDN**, the iPad is LAN-only).
+  - `app/static/fonts/` — self-hosted `bricolage-grotesque.woff2` +
+    `hanken-grotesk.woff2` (house-style fonts, `@font-face` in `styles.css`;
+    no CDN). Shared with `~/caddy/` and `~/choresapp/`.
   - `app/static/manifest.webmanifest` — PWA manifest (linked from
     `base.html`, served as `application/manifest+json` via a MIME type
     registered in `main.py`).

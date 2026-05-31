@@ -12,13 +12,14 @@
          plain HTTP on the LAN that's not a secure context, so one would
          never register; the app needs the server for all data anyway. -->
     <link rel="manifest" href="/static/manifest.webmanifest">
-    <meta name="theme-color" content="#3ba0ff">
+    <meta name="theme-color" content="#e0653a">
     <!-- iPadOS standalone is driven by these Apple-specific tags, not the
-         manifest's display mode. black-translucent + viewport-fit=cover
-         (above) gives the dark header a full-bleed look under the clock. -->
+         manifest's display mode. The header is light now, so use the default
+         (dark text) status bar — black-translucent would render dark text
+         that vanishes against the light header. -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Pantry">
     <link rel="apple-touch-icon" href="/static/icons/icon-180.png">
     <link rel="icon" href="/static/icons/icon-192.png">
@@ -30,7 +31,9 @@
 </head>
 <body>
     <header class="app-header">
+        <div class="eyebrow"><span class="pip"></span><span>command.home.arpa</span></div>
         <h1>Kitchen Pantry</h1>
+        <p class="tagline">What's in the kitchen &amp; what's running low.</p>
     </header>
     <main>
         {% block content %}{% endblock %}
