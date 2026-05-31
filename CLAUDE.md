@@ -79,8 +79,9 @@ Seeded; grow this as patterns settle.
 - **One language front-to-back is Python**; client JS is the exception,
   not the default — reach for HTMX first.
 - **Git:** branch → edit → commit → push; never merge without being
-  asked. Small, scannable commit subjects. (No remote yet — local-only
-  until/unless a private remote is set up.)
+  asked. Small, scannable commit subjects. Public remote:
+  `github.com/EWH2000/pantryapp`, default branch `main`. Keep all tracked
+  files free of personal info (the repo is public).
 
 ## How to run
 
