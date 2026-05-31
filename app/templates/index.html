@@ -25,6 +25,14 @@
                     {% endfor %}
                 </select>
             </label>
+            <label class="field">Type
+                <select name="category">
+                    <option value="">— none —</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat.value }}">{{ cat.value|capitalize }}</option>
+                    {% endfor %}
+                </select>
+            </label>
         </div>
         <button class="btn btn-add" type="submit">Add to pantry</button>
     </form>
@@ -40,18 +48,36 @@
            hx-target="#item-list"
            hx-include=".filters input:checked">
     <div class="filters">
+        <span class="filter-label">Where</span>
         <label class="chip">
             <input type="radio" name="location" value="" checked
                    hx-get="/items" hx-target="#item-list"
-                   hx-include=".search">
+                   hx-include=".search, .filters input:checked">
             <span>All</span>
         </label>
         {% for loc in locations %}
         <label class="chip">
             <input type="radio" name="location" value="{{ loc.value }}"
                    hx-get="/items" hx-target="#item-list"
-                   hx-include=".search">
+                   hx-include=".search, .filters input:checked">
             <span>{{ loc.value|capitalize }}</span>
+        </label>
+        {% endfor %}
+    </div>
+    <div class="filters">
+        <span class="filter-label">Type</span>
+        <label class="chip">
+            <input type="radio" name="category" value="" checked
+                   hx-get="/items" hx-target="#item-list"
+                   hx-include=".search, .filters input:checked">
+            <span>All</span>
+        </label>
+        {% for cat in categories %}
+        <label class="chip">
+            <input type="radio" name="category" value="{{ cat.value }}"
+                   hx-get="/items" hx-target="#item-list"
+                   hx-include=".search, .filters input:checked">
+            <span>{{ cat.value|capitalize }}</span>
         </label>
         {% endfor %}
     </div>

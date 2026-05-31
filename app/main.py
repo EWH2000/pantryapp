@@ -15,7 +15,7 @@ from fastapi.templating import Jinja2Templates
 from sqlmodel import Session, col, select
 
 from app.db import get_session, init_db
-from app.models import Item, Location, Status
+from app.models import Category, Item, Location, Status
 
 
 @asynccontextmanager
@@ -41,7 +41,11 @@ def index(request: Request, session: Session = Depends(get_session)):
     return templates.TemplateResponse(
         request,
         "index.html",
-        {"items": _all_items(session), "locations": list(Location)},
+        {
+            "items": _all_items(session),
+            "locations": list(Location),
+            "categories": list(Category),
+        },
     )
 
 
@@ -50,12 +54,13 @@ def list_items(
     request: Request,
     q: str = "",
     location: str = "",
+    category: str = "",
     session: Session = Depends(get_session),
 ):
-    """The list fragment, optionally narrowed by search text and location.
+    """The list fragment, optionally narrowed by search, location, category.
 
     This is the HTMX swap target for #item-list. The search box and the
-    location chips both call here; `q` and `location` may be empty.
+    filter chips call here; `q`, `location`, `category` may all be empty.
     """
     statement = select(Item)
     q = q.strip()
@@ -67,6 +72,11 @@ def list_items(
             statement = statement.where(Item.location == Location(location))
         except ValueError:
             pass                        # unknown location → no filter
+    if category:
+        try:
+            statement = statement.where(Item.category == Category(category))
+        except ValueError:
+            pass                        # unknown category → no filter
     items = list(session.exec(statement.order_by(Item.name)).all())
     return templates.TemplateResponse(
         request,
@@ -82,16 +92,24 @@ def create_item(
     quantity: float = Form(1),
     unit: str = Form("pcs"),
     location: Location = Form(Location.pantry),
+    category: str = Form(""),
     session: Session = Depends(get_session),
 ):
     """Add an item from the form, then return the refreshed list."""
     name = name.strip()
     if name:                            # ignore an empty submit, don't error
+        cat = None
+        if category:
+            try:
+                cat = Category(category)
+            except ValueError:
+                cat = None              # unknown value → leave uncategorized
         session.add(Item(
             name=name,
             quantity=quantity,
             unit=unit.strip() or "pcs",
             location=location,
+            category=cat,
         ))
         session.commit()
     return templates.TemplateResponse(
