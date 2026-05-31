@@ -28,7 +28,11 @@ body {
 }
 
 .app-header {
-    padding: 1rem 1.25rem;
+    /* Add the iOS status-bar inset to the top so the translucent bar
+       (apple-mobile-web-app-status-bar-style=black-translucent) sits over
+       the dark header instead of clipping the title. Falls back to 0 in
+       browsers without env(). */
+    padding: calc(1rem + env(safe-area-inset-top, 0px)) 1.25rem 1rem;
     background: var(--surface);
     border-bottom: 1px solid #2a3744;
     position: sticky;

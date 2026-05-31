@@ -6,6 +6,23 @@
     <meta name="viewport"
           content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>Kitchen Pantry</title>
+
+    <!-- PWA: lets the iPad "Add to Home Screen" and run fullscreen,
+         kiosk-style, with no Safari chrome. No service worker — over
+         plain HTTP on the LAN that's not a secure context, so one would
+         never register; the app needs the server for all data anyway. -->
+    <link rel="manifest" href="/static/manifest.webmanifest">
+    <meta name="theme-color" content="#3ba0ff">
+    <!-- iPadOS standalone is driven by these Apple-specific tags, not the
+         manifest's display mode. black-translucent + viewport-fit=cover
+         (above) gives the dark header a full-bleed look under the clock. -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Pantry">
+    <link rel="apple-touch-icon" href="/static/icons/icon-180.png">
+    <link rel="icon" href="/static/icons/icon-192.png">
+
     <link rel="stylesheet" href="/static/css/styles.css">
     <!-- HTMX is served locally, never from a CDN: the kitchen iPad only
          talks to the LAN and can't reach the internet. -->
