@@ -24,7 +24,10 @@
     <link rel="apple-touch-icon" href="/static/icons/icon-180.png">
     <link rel="icon" href="/static/icons/icon-192.png">
 
-    <link rel="stylesheet" href="/static/css/styles.css">
+    <!-- ?v= cache-buster: bump when styles.css changes so devices that
+         cached an older copy (before Cache-Control: no-cache shipped) fetch
+         the new one without a manual cache clear. -->
+    <link rel="stylesheet" href="/static/css/styles.css?v=2">
     <!-- HTMX is served locally, never from a CDN: the kitchen iPad only
          talks to the LAN and can't reach the internet. -->
     <script src="/static/js/htmx.min.js" defer></script>
