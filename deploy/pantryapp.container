@@ -17,6 +17,12 @@ ContainerName=pantryapp
 Image=localhost/pantryapp:latest
 # host:container — serve on the LAN on port 8000.
 PublishPort=8000:8000
+# Served behind the hub's Caddy reverse proxy at http://command.home.arpa/pantry/
+# so the wall-mounted iPad's installed (full-screen) web app stays full-screen
+# when opening it (same origin = no bounce to Safari). Caddy strips the /pantry
+# prefix; this tells the app to prepend it to the URLs it emits. Direct access on
+# :8000 still works (the app also answers at the root). Leave unset for dev.
+Environment=BASE_PATH=/pantry
 # Named volume holds the live SQLite DB; :U fixes ownership for the
 # non-root container user. Survives image rebuilds & container re-creation.
 Volume=pantrydata:/data:U

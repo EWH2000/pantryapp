@@ -16,22 +16,22 @@
             <div class="status-group" role="group" aria-label="Stock status">
                 <button type="button"
                         class="status-btn status-btn--ok{{ ' is-active' if item.status.value == 'ok' }}"
-                        hx-post="/items/{{ item.id }}/status"
+                        hx-post="{{ base_path }}/items/{{ item.id }}/status"
                         hx-vals='{"status": "ok"}'
                         hx-target="#item-list">Have it</button>
                 <button type="button"
                         class="status-btn status-btn--low{{ ' is-active' if item.status.value == 'low' }}"
-                        hx-post="/items/{{ item.id }}/status"
+                        hx-post="{{ base_path }}/items/{{ item.id }}/status"
                         hx-vals='{"status": "low"}'
                         hx-target="#item-list">Low</button>
                 <button type="button"
                         class="status-btn status-btn--out{{ ' is-active' if item.status.value == 'out' }}"
-                        hx-post="/items/{{ item.id }}/status"
+                        hx-post="{{ base_path }}/items/{{ item.id }}/status"
                         hx-vals='{"status": "out"}'
                         hx-target="#item-list">Out</button>
             </div>
             <button type="button" class="remove-btn"
-                    hx-delete="/items/{{ item.id }}"
+                    hx-delete="{{ base_path }}/items/{{ item.id }}"
                     hx-target="#item-list"
                     hx-confirm="Remove {{ item.name }}?"
                     aria-label="Remove {{ item.name }}">✕</button>

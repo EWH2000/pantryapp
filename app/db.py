@@ -2,7 +2,8 @@
 
 SQLite keeps the entire pantry in a single file (`pantry.db`), so a
 "backup" is just copying that one file. `init_db()` creates the tables on
-startup if they don't exist yet — no migration tooling needed for v1.
+startup if they don't exist yet, then applies any lightweight additive
+column migrations (see `_ensure_column`) — enough for v1 without Alembic.
 `get_session()` hands each web request its own short-lived Session (a unit
 of work / transaction) and closes it when the request finishes.
 """
@@ -28,8 +29,45 @@ engine = create_engine(
 
 
 def init_db() -> None:
-    """Create a table for every SQLModel `table=True` class, if missing."""
+    """Create missing tables, then apply additive column migrations.
+
+    `create_all()` only creates *absent* tables; it never ALTERs an existing
+    one. So when we add a new column to a model, a database that already has
+    real data (the live kitchen DB) won't pick it up. For a nullable, additive
+    column SQLite supports a cheap `ALTER TABLE ... ADD COLUMN`, which we run
+    idempotently here so a plain container restart applies it — no Alembic, no
+    manual SQL the non-technical operator could forget.
+    """
     SQLModel.metadata.create_all(engine)
+    _ensure_column("item", "barcode", "VARCHAR")
+    _migrate_categories()
+
+
+def _ensure_column(table: str, column: str, ddl_type: str) -> None:
+    """Add `column` to `table` if it isn't there yet (SQLite, additive only).
+
+    `table`/`column`/`ddl_type` are our own literals (never user input), so the
+    f-string interpolation has no injection surface. A no-op after the first run.
+    """
+    with engine.begin() as conn:
+        cols = conn.exec_driver_sql(f"PRAGMA table_info({table})").fetchall()
+        if column not in {row[1] for row in cols}:   # row[1] = column name
+            conn.exec_driver_sql(
+                f"ALTER TABLE {table} ADD COLUMN {column} {ddl_type}"
+            )
+
+
+def _migrate_categories() -> None:
+    """Data fix for the 2026-06-06 category revamp (see `models.Category`).
+
+    The old meal-role values are no longer valid `Category` members, so any row
+    still holding one would raise on load. Reclassify them: `main` → `meat`,
+    and the dropped `side` → uncategorized (NULL). Raw SQL so it bypasses the
+    enum; idempotent — after the first run no rows match.
+    """
+    with engine.begin() as conn:
+        conn.exec_driver_sql("UPDATE item SET category = 'meat' WHERE category = 'main'")
+        conn.exec_driver_sql("UPDATE item SET category = NULL WHERE category = 'side'")
 
 
 def get_session() -> Generator[Session, None, None]:
