@@ -1,13 +1,26 @@
 {% extends "base.html" %}
 {% block content %}
 <section class="add-card">
+    <!-- Opens the camera overlay (scan.js). Scanning pre-fills the form below
+         from Open Food Facts; type="button" so it never submits the form. -->
+    <button type="button" class="btn btn-scan" id="scan-btn">
+        <svg class="btn-scan__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 5v14M7 5v14M11 5v14M14 5v14M18 5v14M21 5v14"/>
+        </svg>
+        Scan a barcode
+    </button>
     <!-- On submit, POST the form and replace #item-list with the fresh
-         list HTMX gets back. On success, reset the form for the next add. -->
+         list HTMX gets back. On success, reset the form (clears the hidden
+         barcode + name) and dismiss any scan banner for the next add. -->
     <form id="add-form"
-          hx-post="/items"
+          hx-post="{{ base_path }}/items"
           hx-target="#item-list"
           hx-swap="innerHTML"
-          hx-on::after-request="if (event.detail.successful) this.reset()">
+          hx-on::after-request="if (event.detail.successful) { this.reset(); document.getElementById('scan-result').hidden = true; }">
+        <!-- Carries the scanned UPC/EAN so create_item stores it; empty for a
+             hand-add. Reset to "" on success, so a later hand-add won't reuse it. -->
+        <input type="hidden" name="barcode" id="add-barcode" value="">
         <input class="add-name" type="text" name="name"
                placeholder="Add an item…" autocomplete="off" required>
         <div class="add-row">
@@ -36,6 +49,9 @@
         </div>
         <button class="btn btn-add" type="submit">Add to pantry</button>
     </form>
+    <!-- scan.js fills this with feedback after a scan: a "filled from barcode"
+         note for a new item, or an "already have it — +1" banner for a dupe. -->
+    <div id="scan-result" class="scan-result" hidden aria-live="polite"></div>
 </section>
 
 <section class="controls">
@@ -43,7 +59,7 @@
          checked location chip so search + filter combine. -->
     <input class="search" type="search" name="q"
            placeholder="Search the pantry…" autocomplete="off"
-           hx-get="/items"
+           hx-get="{{ base_path }}/items"
            hx-trigger="input changed delay:300ms, search"
            hx-target="#item-list"
            hx-include=".filters input:checked">
@@ -51,14 +67,14 @@
         <span class="filter-label">Where</span>
         <label class="chip">
             <input type="radio" name="location" value="" checked
-                   hx-get="/items" hx-target="#item-list"
+                   hx-get="{{ base_path }}/items" hx-target="#item-list"
                    hx-include=".search, .filters input:checked">
             <span>All</span>
         </label>
         {% for loc in locations %}
         <label class="chip">
             <input type="radio" name="location" value="{{ loc.value }}"
-                   hx-get="/items" hx-target="#item-list"
+                   hx-get="{{ base_path }}/items" hx-target="#item-list"
                    hx-include=".search, .filters input:checked">
             <span>{{ loc.value|capitalize }}</span>
         </label>
@@ -68,14 +84,14 @@
         <span class="filter-label">Type</span>
         <label class="chip">
             <input type="radio" name="category" value="" checked
-                   hx-get="/items" hx-target="#item-list"
+                   hx-get="{{ base_path }}/items" hx-target="#item-list"
                    hx-include=".search, .filters input:checked">
             <span>All</span>
         </label>
         {% for cat in categories %}
         <label class="chip">
             <input type="radio" name="category" value="{{ cat.value }}"
-                   hx-get="/items" hx-target="#item-list"
+                   hx-get="{{ base_path }}/items" hx-target="#item-list"
                    hx-include=".search, .filters input:checked">
             <span>{{ cat.value|capitalize }}</span>
         </label>
@@ -86,4 +102,24 @@
 <section id="item-list">
     {% include "_item_list.html" %}
 </section>
+
+<!-- Camera scan overlay — hidden until #scan-btn opens it. Vanilla JS drives
+     the decode loop (HTMX can't reach a <video>). The still-photo input is the
+     always-present fallback for when the live camera isn't available (insecure
+     context / permission denied / no camera). -->
+<div id="scan-overlay" class="scan-overlay" hidden aria-hidden="true"
+     role="dialog" aria-label="Scan a barcode">
+    <div class="scan-stage">
+        <video id="scan-video" playsinline muted></video>
+        <div class="scan-reticle" aria-hidden="true"></div>
+    </div>
+    <p class="scan-hint" id="scan-hint">Point the camera at a barcode</p>
+    <div class="scan-actions">
+        <label class="btn btn-scan-file">
+            Use a photo
+            <input id="scan-file" type="file" accept="image/*" capture="environment" hidden>
+        </label>
+        <button type="button" class="btn btn-scan-cancel" id="scan-cancel">Cancel</button>
+    </div>
+</div>
 {% endblock %}

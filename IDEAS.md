@@ -9,6 +9,55 @@ top within each section. Dates are when the note was added.
 
 ## Ideas
 
+### Barcode scan-to-add — *2026-06-06* — *v2 / new feature*
+
+> **Built 2026-06-06.** Phone camera (native `BarcodeDetector` → vendored
+> ZXing fallback, the primary path on iOS) decodes in-browser; only the number
+> hits `GET /scan/lookup`, which queries Open Food Facts (`app/lookup.py`).
+> Scan **pre-fills the add form**: the name, plus **quantity** from a pack
+> count in the name/size ("6 pack", "24 × 355 ml" → 6/24; bare "144 fl oz" → 12
+> for the Diet Coke staple; never bare numbers — see `parse_pack_count`). A
+> rescan of an owned item offers **+1** (`POST /items/{id}/bump`) via the new
+> `Item.barcode` field. Still-photo `<input type=file capture>` fallback for
+> non-secure contexts. See CLAUDE.md → Stack. The decisions/options below are
+> kept for the record.
+>
+> **Also 2026-06-06:** categories were revamped from the old meal-role set
+> (main/side/snack) to a food-type taxonomy — meat, vegetables, fruit, dairy,
+> grains, frozen meals, sauces, seasoning, baking, snack, drink. `main` → `meat`
+> and `side` → uncategorized via a one-time data migration in `db.py`.
+
+Point a phone camera at a grocery barcode and have the item added (or
+pre-filled) without typing. Discussed alongside the photo-gallery build; the
+two share less than expected, so this stays a self-contained pantry feature.
+
+- **Mostly client-side.** The decode happens in the browser: the phone turns
+  the camera frame into a UPC/EAN number and sends *just the number* to the
+  server. No image is uploaded, stored, or processed server-side — so this is
+  **not** shared infrastructure with the photo gallery (that app does
+  server-side image storage/thumbnails; this does neither).
+- **Decode (browser):** native `BarcodeDetector` API on Chrome/Android (fast,
+  no library) when present; a vendored fallback for iOS Safari (which lacks
+  `BarcodeDetector`) — `@zxing/library` or `html5-qrcode`, reading EAN-13 /
+  UPC-A from the live video. Vendor it locally (no CDN, like `htmx.min.js`).
+- **Needs HTTPS:** live camera (`getUserMedia`) only runs in a secure context.
+  Unblocked once the hub moved to HTTPS via Caddy's internal CA (done in the
+  photo-gallery project, 2026-06-06). Degraded fallback before that: an
+  `<input type=file capture>` still photo + single-frame decode.
+- **Lookup (server):** a new `POST /scan` (or fold into `/items`) takes the
+  number and queries **Open Food Facts**
+  (`https://world.openfoodfacts.org/api/v2/product/{barcode}.json` — free, no
+  key) → `product_name`, `brands`, `quantity`. The box has outbound internet.
+  Cache results (the same barcode rescans often).
+- **Model:** add `barcode: str | None = Field(default=None, index=True)` to
+  `Item`. Use it for dedup ("already have this — bump quantity?") and to skip
+  re-lookups. (Schema change → see the `ALTER TABLE` migration note below.)
+- **UX (open):** scan → **pre-fill the add form** (confirm qty/location) vs.
+  **auto-add + undo toast**. Lean pre-fill for v1; Open Food Facts names can be
+  messy. Unknown product / OFF unreachable → store the barcode, name blank.
+- **Decode-library pick (open):** ZXing vs html5-qrcode — test which reads real
+  grocery barcodes fastest on the household iPhones.
+
 ### Recipes + "can I make it?" cross-check — *2026-05-31* — *v2 / larger*
 
 The v2 "meal ideas" direction, fleshed out. Two connected pieces:
@@ -126,3 +175,11 @@ existing ones**. While the pantry is empty/dev we can just delete
 kitchen iPad, adding a field needs a deliberate migration (a manual
 `ALTER TABLE`, or adopting a tool like Alembic). Flagging so a future
 field-add doesn't silently fail to apply to the live database.
+
+> **Partly addressed 2026-06-06** (barcode build): `db.py` now has
+> `_ensure_column(table, column, type)`, called from `init_db()`, which runs an
+> idempotent `ALTER TABLE … ADD COLUMN` guarded by a `PRAGMA table_info` check.
+> A plain container restart applies an **additive, nullable** column to the live
+> DB — no manual SQL. Reuse it for the next such field (`expires_on`, `par`).
+> Still not a full migration tool: column *drops*, renames, type changes, or
+> non-null defaults need more (Alembic) — revisit if one of those comes up.

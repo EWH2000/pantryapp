@@ -29,11 +29,22 @@ class Status(str, Enum):
 
 
 class Category(str, Enum):
-    """What role an item plays in a meal — for sorting/filtering."""
+    """What kind of food an item is — a pantry-section taxonomy for
+    sorting/filtering. (Revamped 2026-06-06 from the old meal-role set:
+    `main` → `meat`, `side` dropped → uncategorized; see `db.py`.)
+    """
 
-    main = "main"      # the centerpiece (meat, mains)
-    side = "side"      # sides, veg, starches
-    snack = "snack"    # snacks, nibbles
+    meat = "meat"                   # proteins — beef, chicken, fish
+    vegetables = "vegetables"       # fresh / canned veg
+    fruit = "fruit"                 # fresh / canned fruit
+    dairy = "dairy"                 # milk, cheese, yogurt, butter, eggs
+    grains = "grains"               # rice, pasta, cereal, bread, oats
+    frozen_meals = "frozen meals"   # ready / prepared frozen meals
+    sauces = "sauces"               # sauces, condiments, dressings
+    seasoning = "seasoning"         # spices, herbs, salt
+    baking = "baking"               # flour, sugar, baking supplies
+    snack = "snack"                 # snacks, nibbles
+    drink = "drink"                 # beverages — sodas, water, juice
 
 
 class Item(SQLModel, table=True):
@@ -51,6 +62,10 @@ class Item(SQLModel, table=True):
     status: Status = Status.ok
     # Optional: not every staple is a main/side/snack (oil, flour…).
     category: Category | None = Field(default=None, index=True)
+    # The scanned UPC/EAN, when an item was added by barcode. Indexed so a
+    # rescan can find the existing item and bump it instead of duplicating.
+    # NULL for hand-added items (so their first scan won't false-match).
+    barcode: str | None = Field(default=None, index=True)
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc)
     )

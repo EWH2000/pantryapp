@@ -84,6 +84,23 @@ body {
     z-index: 5;
 }
 
+/* Home pill — the back-to-hub button, shared verbatim across the apps
+   (~/caddy/CLAUDE.md). Pinned to the IPv4 hub URL, not the hostname. */
+.home-pill {
+    position: absolute;
+    top: calc(0.9rem + env(safe-area-inset-top, 0px));
+    right: 1.25rem;
+    display: inline-flex; align-items: center; gap: .4rem;
+    min-height: var(--tap); padding: 0 .8rem;
+    border: 1px solid var(--border); border-radius: 999px;
+    background: var(--surface); color: var(--ink);
+    font-weight: 600; font-size: .9rem; text-decoration: none;
+    transition: border-color .15s ease, color .15s ease, transform .1s ease;
+}
+.home-pill:hover, .home-pill:focus-visible { border-color: var(--accent); color: var(--accent); outline: none; }
+.home-pill:active { transform: scale(.97); }
+.home-pill__icon { width: 18px; height: 18px; }
+
 .eyebrow {
     display: inline-flex; align-items: center; gap: .5rem;
     color: var(--muted); font-size: .78rem; font-weight: 600;
@@ -359,3 +376,115 @@ input:focus, select:focus {
     .item { animation: rise .35s cubic-bezier(.2,.7,.3,1); }
     @keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 }
+
+/* --- Barcode scan --------------------------------------------------- */
+
+/* Opener — secondary to "Add to pantry": accent text on a soft tint. */
+.btn-scan {
+    width: 100%;
+    margin-bottom: 0.75rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.7rem;
+    font-size: 1.05rem;
+    background: var(--accent-soft);
+    color: var(--accent);
+    border: 1px solid var(--accent);
+}
+.btn-scan:hover { filter: brightness(1.03); }
+.btn-scan__icon { width: 22px; height: 22px; }
+
+/* Post-scan feedback under the add form: a "filled from barcode" note, or the
+   "already have it — +1" dedup banner (scan.js sets the contents). */
+.scan-result {
+    margin-top: 0.85rem;
+    padding: 0.75rem 0.9rem;
+    border-radius: 12px;
+    background: var(--accent-soft);
+    border: 1px solid var(--accent);
+    color: var(--ink);
+    font-size: 0.98rem;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+}
+.scan-result[hidden] { display: none; }
+.scan-result__text { flex: 1; min-width: 9rem; }
+.scan-result__text b { font-weight: 700; }
+.scan-result .scan-bump {           /* the +1 quantity bump */
+    background: var(--accent);
+    color: #fff;
+    padding: 0 1rem;
+}
+.scan-result .scan-dismiss {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 0 0.9rem;
+}
+
+/* Full-screen camera overlay. The dark scrim is conventional for camera UIs and
+   reads on both themes; action buttons use surface tokens that flip with dark
+   mode. z-index sits above the sticky header (z-index:5). */
+.scan-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    background: rgba(0, 0, 0, 0.92);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    padding: calc(1rem + env(safe-area-inset-top, 0px)) 1rem
+             calc(1rem + env(safe-area-inset-bottom, 0px));
+}
+.scan-overlay[hidden] { display: none; }
+
+.scan-stage {
+    position: relative;
+    width: min(92vw, 520px);
+    aspect-ratio: 4 / 3;
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: #000;
+}
+.scan-stage video { width: 100%; height: 100%; object-fit: cover; }
+/* When the live camera isn't available we hide the video frame and lean on the
+   "Use a photo" fallback. */
+.scan-overlay.is-fallback .scan-stage { display: none; }
+
+.scan-reticle {
+    position: absolute;
+    inset: 22% 12%;
+    border: 3px solid var(--accent);
+    border-radius: 12px;
+    box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.35);   /* clipped to .scan-stage */
+}
+
+.scan-hint {
+    color: #fff;
+    font-size: 1rem;
+    text-align: center;
+    margin: 0;
+    max-width: 32rem;
+}
+
+.scan-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+.btn-scan-file, .btn-scan-cancel {
+    min-height: var(--tap);
+    padding: 0 1.2rem;
+    display: inline-flex;
+    align-items: center;
+    font-size: 1rem;
+}
+.btn-scan-file { background: var(--surface); color: var(--ink); border: 1px solid var(--border); }
+.btn-scan-cancel { background: var(--accent); color: #fff; }

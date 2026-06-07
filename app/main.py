@@ -7,6 +7,7 @@ full reload, so there's no hand-written JSON-to-DOM glue.
 """
 
 import mimetypes
+import os
 from contextlib import asynccontextmanager
 
 from fastapi import Depends, FastAPI, Form, Request
@@ -16,6 +17,7 @@ from fastapi.templating import Jinja2Templates
 from sqlmodel import Session, col, select
 
 from app.db import get_session, init_db
+from app.lookup import lookup_product
 from app.models import Category, Item, Location, Status
 
 
@@ -52,6 +54,15 @@ class RevalidatingStaticFiles(StaticFiles):
 app = FastAPI(title="pantryapp", lifespan=lifespan)
 app.mount("/static", RevalidatingStaticFiles(directory="app/static"), name="static")
 templates = Jinja2Templates(directory="app/templates")
+
+# Public URL prefix when this app is served behind the hub's reverse proxy
+# (Caddy) at a sub-path like "/pantry". Empty in dev, where uvicorn serves the
+# app at the root. Caddy STRIPS the prefix before forwarding, so the routes stay
+# defined at "/..."; templates prepend `base_path` to every absolute URL they
+# emit (static assets + HTMX endpoints) so the SAME build works at "/" locally
+# and under "/pantry/" behind the proxy. Set via the quadlet's Environment=.
+BASE_PATH = os.environ.get("BASE_PATH", "").rstrip("/")
+templates.env.globals["base_path"] = BASE_PATH
 
 
 def _all_items(session: Session) -> list[Item]:
@@ -123,6 +134,7 @@ def create_item(
     unit: str = Form("pcs"),
     location: Location = Form(Location.pantry),
     category: str = Form(""),
+    barcode: str = Form(""),            # hidden field; empty for a hand-add
     session: Session = Depends(get_session),
 ):
     """Add an item from the form, then return the refreshed list."""
@@ -140,6 +152,7 @@ def create_item(
             unit=unit.strip() or "pcs",
             location=location,
             category=cat,
+            barcode=barcode.strip() or None,   # store NULL, not "", when absent
         ))
         session.commit()
     return templates.TemplateResponse(
@@ -147,6 +160,34 @@ def create_item(
         "_item_list.html",
         {"items": _all_items(session)},
     )
+
+
+@app.get("/scan/lookup")
+def scan_lookup(barcode: str, session: Session = Depends(get_session)):
+    """Resolve a scanned barcode for the add form: dedup + product info.
+
+    Returns JSON (not a fragment): the camera decode is already JS — HTMX can't
+    run a video decode loop — and the result drives field pre-filling plus a
+    dedup branch, which is a data operation, not a swap. The add itself still
+    goes through the HTMX `POST /items`. `existing` is set when we already own
+    an item with this barcode (offer +1 instead of a duplicate); `product` is
+    the Open Food Facts lookup, or null when unknown/unreachable.
+    """
+    barcode = barcode.strip()
+    existing = None
+    if barcode:
+        existing = session.exec(
+            select(Item).where(Item.barcode == barcode)
+        ).first()
+    product = lookup_product(barcode) if barcode else None
+    return {
+        "barcode": barcode,
+        "existing": (
+            {"id": existing.id, "name": existing.name, "quantity": existing.quantity}
+            if existing else None
+        ),
+        "product": product,             # {name, brands, package_size} or null
+    }
 
 
 @app.post("/items/{item_id}/status", response_class=HTMLResponse)
@@ -160,6 +201,29 @@ def set_status(
     item = session.get(Item, item_id)
     if item:
         item.status = status
+        session.add(item)
+        session.commit()
+    return templates.TemplateResponse(
+        request,
+        "_item_list.html",
+        {"items": _all_items(session)},
+    )
+
+
+@app.post("/items/{item_id}/bump", response_class=HTMLResponse)
+def bump_quantity(
+    request: Request,
+    item_id: int,
+    session: Session = Depends(get_session),
+):
+    """Add one to an item's quantity (the scan 'already have it — +1').
+
+    Re-scanning a staple you already own while unpacking should top it up, not
+    create a duplicate. Returns the refreshed list like the other mutations.
+    """
+    item = session.get(Item, item_id)
+    if item:
+        item.quantity += 1
         session.add(item)
         session.commit()
     return templates.TemplateResponse(
